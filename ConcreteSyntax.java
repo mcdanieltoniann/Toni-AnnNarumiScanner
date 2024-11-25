@@ -42,14 +42,11 @@ public class ConcreteSyntax {
 
 	// Implementation of the Recursive Descent Parser
 
-	public Program program() {
-		// COMPLETED 
+	public Program program() { 
 		// Program --> main '{' Declarations Statements '}'
-		String[] header = {"main", "{"};
 		Program p = new Program();
-		for (int i = 0; i < header.length; i++)
-			// bypass " main { "
-			match(header[i]);
+		match("main");
+		match("{");
 		p.decpart = declarations();
 		p.body = statements();
 		match("}");
@@ -57,7 +54,6 @@ public class ConcreteSyntax {
 	}
 
 	private Declarations declarations() {
-		// TODO TO BE COMPLETED 
 		// Declarations --> { Declaration }*
 		Declarations ds = new Declarations();
 		while (token.getValue().equals("integer")
@@ -78,9 +74,9 @@ public class ConcreteSyntax {
 		// Type --> integer | bool
 		Type t = null;
 		if (token.getValue().equals("integer")) {
-			t = new Type(Type.INTEGER);
+			t = new Type(token.getValue());
 		} else if (token.getValue().equals("bool")) {
-			t = new Type(Type.BOOLEAN);
+			t = new Type(token.getValue());
 		} else {
 			throw new RuntimeException(SyntaxError("integer | bool"));
 		}
@@ -138,7 +134,10 @@ public class ConcreteSyntax {
 		// Block --> '{' Statements '}'
 		Block b = new Block();
 		while (!token.getValue().equals("}")) {
-			b.blockmembers.addElement(statement());
+			Statement s = statement();
+			if (!(s instanceof Skip)) {
+				b.blockmembers.addElement(s);
+			}
 		}
 		return b;
 	}
@@ -147,13 +146,11 @@ public class ConcreteSyntax {
 		// Assignment --> Identifier := Expression ;
 		Assignment a = new Assignment();
 		if (token.getType().equals("Identifier")) {
-			Variable v = new Variable();
-			v.id = token.getValue();
-			a.target = v;
+			a.target = new Variable();
+			a.target.id = token.getValue();
 			token = input.nextToken();
 			match(":=");
 			a.source = expression();
-			match(";");
 		} else {
 			throw new RuntimeException(SyntaxError("Identifier"));
 		}
@@ -199,7 +196,7 @@ public class ConcreteSyntax {
 		Expression e = addition(); // Parse the first addition
 		if (token.getValue().equals("<") || token.getValue().equals("<=") ||
 			token.getValue().equals(">") || token.getValue().equals(">=") ||
-			token.getValue().equals("==") || token.getValue().equals("<>")) {
+			token.getValue().equals("==") || token.getValue().equals("!=")) {
 			b = new Binary();
 			b.term1 = e;
 			b.op = new Operator(token.getValue());
@@ -264,7 +261,7 @@ public class ConcreteSyntax {
 		} else if (token.getType().equals("Literal")) {
 			Value v = null;
 			if (isInteger(token.getValue()))
-				v = new Value((new Integer(token.getValue())).intValue());
+				v = new Value(Integer.parseInt(token.getValue()));
 			else if (token.getValue().equals("True"))
 				v = new Value(true);
 			else if (token.getValue().equals("False"))
@@ -291,7 +288,7 @@ public class ConcreteSyntax {
 		match(")");
 		c.thenbranch = statement();
 		if (token.getValue().equals("else")) { 
-			match("else");
+			token = input.nextToken();
 			c.elsebranch = statement();
 		}
 		return c;
