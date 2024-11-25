@@ -60,7 +60,7 @@ public class TokenStream {
 					nextChar = readChar();
 				}
 				if (isEof) { // Break out if EOF is reached within a comment
-					return t;
+					skipWhiteSpace();
 				}
 				// look for <cr>, <lf>, <ff>
 			} else {
